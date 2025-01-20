@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos base */
+body {
+  @apply bg-gradient-to-br from-indigo-900 via-purple-800 to-indigo-700 text-gray-100;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.8;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply font-extrabold text-white;
+  line-height: 1.4;
+}
+
+a {
+  @apply text-blue-400 hover:text-blue-500 underline transition-all duration-150 ease-in-out;
+}
+
+button {
+  @apply px-4 py-2 bg-purple-600 text-white font-medium rounded shadow-lg transform hover:scale-105 hover:bg-purple-700 focus:ring-4 focus:ring-purple-400 transition-all duration-200 ease-in-out;
+}
+
+input, textarea, select {
+  @apply w-full bg-gray-800 text-gray-100 border border-gray-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all duration-150;
+}
+
+/* Clases personalizadas */
+.card {
+  @apply bg-gray-900 p-6 rounded-lg shadow-lg;
+}
+
+.container {
+  @apply max-w-7xl mx-auto px-4;
+}
+
+.header {
+  @apply text-center text-3xl font-bold text-white mb-6;
+}
+
+.footer {
+  @apply mt-12 text-center text-sm text-gray-300;
+}
+
+/* Hover y transición */
+.hover-effect {
+  @apply transition-transform duration-300 ease-in-out transform hover:scale-110;
+}
