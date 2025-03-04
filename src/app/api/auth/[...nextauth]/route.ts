@@ -3,7 +3,6 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
-
 const prisma = new PrismaClient();
 
 const handler = NextAuth({
@@ -38,32 +37,38 @@ const handler = NextAuth({
           throw new Error('Invalid password');
         }
 
-        // Retornar el usuario para incluirlo en el token
-        return { id: user.id.toString(), email: user.email }; // Aseguramos que `id` sea un string
+        // ✅ Retornar el usuario asegurando que incluya `name`
+        return { 
+          id: user.id.toString(), 
+          email: user.email, 
+          name: user.name || 'Usuario Desconocido' // 🔥 Asegurar que `name` esté presente
+        };
       },
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET || 'default-secret-key',
   pages: {
-    signIn: '/auth/login', // Página de inicio de sesión
-    error: '/auth/error',  // Página de error personalizada
+    signIn: '/auth/login',
+    error: '/auth/error',
   },
   callbacks: {
     async session({ session, token }) {
-      // Agregamos `id` y `email` del token a la sesión del usuario
+      // ✅ Agregar `name` a la sesión
       if (token) {
         session.user = {
-          id: token.sub as string, // token.sub contiene el ID del usuario
-          email: token.email as string, // token.email contiene el correo del usuario
+          id: token.sub as string,
+          email: token.email as string,
+          name: token.name as string, // 🔥 Incluir `name` en la sesión
         };
       }
       return session;
     },
     async jwt({ token, user }) {
-      // Si el usuario está disponible (es decir, al hacer login), lo añadimos al token
+      // ✅ Incluir `name` en el token
       if (user) {
-        token.sub = user.id; // token.sub se usa para el ID del usuario
-        token.email = user.email; // token.email contiene el correo del usuario
+        token.sub = user.id;
+        token.email = user.email;
+        token.name = user.name; // 🔥 Guardamos `name` en el token
       }
       return token;
     },

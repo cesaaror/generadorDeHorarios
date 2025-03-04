@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql" // Cambia esto según tu proveedor, aquí usamos PostgreSQL.
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
@@ -12,5 +12,46 @@ model User {
   email     String   @unique
   password  String
   name      String?
+  isAdmin   Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  employees Employee[] @relation("UserEmployees") // Relación con empleados
+}
+
+model Employee {
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String   @unique
+  role      Role
+  shift     Shift
+  dayOff    String?
+  createdAt DateTime @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], name: "UserEmployees")
+
+  schedules Schedule[]
+}
+
+model Schedule {
+  id         Int      @id @default(autoincrement())
+  employeeId Int
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  date       DateTime
+  shift      Shift
+}
+
+enum Role {
+  CAJERO
+  REPONEDOR
+  CARNICERO
+  CHARCUTERO
+  PESCADERO
+  PANADERO
+  ENCARGADO
+}
+
+enum Shift {
+  MAÑANA
+  TARDE
 }

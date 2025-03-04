@@ -1,14 +1,11 @@
-// src/pages/_app.tsx
-import React from 'react';
-import { ThemeProvider } from '../context/ThemeContext';
+import { SessionProvider } from 'next-auth/react';
+import type { AppProps } from 'next/app';
 import '../styles/globals.css';
 
-const MyApp = ({ Component, pageProps }: any) => {
+export default function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <ThemeProvider>
+    <SessionProvider session={pageProps.session}>
       <Component {...pageProps} />
-    </ThemeProvider>
+    </SessionProvider>
   );
-};
-
-export default MyApp;
+}

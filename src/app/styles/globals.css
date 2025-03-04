@@ -4,48 +4,67 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos base */
+/* 🎨 Estilos base con soporte para modo oscuro */
 body {
-  @apply bg-gradient-to-br from-indigo-900 via-purple-800 to-indigo-700 text-gray-100;
+  @apply bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100;
   font-family: 'Inter', sans-serif;
   line-height: 1.8;
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
 }
 
+/* 📌 Encabezados */
 h1, h2, h3, h4, h5, h6 {
-  @apply font-extrabold text-white;
+  @apply font-extrabold text-gray-900 dark:text-white;
   line-height: 1.4;
 }
 
+/* 📌 Enlaces */
 a {
-  @apply text-blue-400 hover:text-blue-500 underline transition-all duration-150 ease-in-out;
+  @apply text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 underline transition-all duration-150 ease-in-out;
 }
 
+/* 📌 Botones */
 button {
-  @apply px-4 py-2 bg-purple-600 text-white font-medium rounded shadow-lg transform hover:scale-105 hover:bg-purple-700 focus:ring-4 focus:ring-purple-400 transition-all duration-200 ease-in-out;
+  @apply px-5 py-2 bg-indigo-600 text-white font-medium rounded-lg shadow-md transform hover:scale-105 hover:bg-indigo-700 
+    focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-500 transition-all duration-200 ease-in-out;
 }
 
+/* 📌 Inputs, Select y Textarea */
 input, textarea, select {
-  @apply w-full bg-gray-800 text-gray-100 border border-gray-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all duration-150;
+  @apply w-full bg-white text-gray-900 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 
+    focus:outline-none transition-all duration-150 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 dark:focus:ring-indigo-400;
 }
 
-/* Clases personalizadas */
+/* 📌 Tarjetas */
 .card {
-  @apply bg-gray-900 p-6 rounded-lg shadow-lg;
+  @apply bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700;
 }
 
+/* 📌 Contenedor principal */
 .container {
-  @apply max-w-7xl mx-auto px-4;
+  @apply max-w-7xl mx-auto px-6;
 }
 
+/* 📌 Cabecera */
 .header {
-  @apply text-center text-3xl font-bold text-white mb-6;
+  @apply text-center text-4xl font-bold text-indigo-700 dark:text-indigo-300 mb-8;
 }
 
+/* 📌 Pie de página */
 .footer {
-  @apply mt-12 text-center text-sm text-gray-300;
+  @apply mt-12 text-center text-sm text-gray-600 dark:text-gray-300;
 }
 
-/* Hover y transición */
+/* ✨ Efecto Hover */
 .hover-effect {
   @apply transition-transform duration-300 ease-in-out transform hover:scale-110;
+}
+
+/* 🔥 Animaciones para la carga */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
