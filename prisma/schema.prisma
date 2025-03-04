@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql" // Cambiamos de SQLite a PostgreSQL
+  url      = env("DATABASE_URL") // Usamos la variable de entorno
 }
 
 model User {
@@ -15,7 +15,7 @@ model User {
   isAdmin   Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  employees Employee[] @relation("UserEmployees") // Relación con empleados
+  employees Employee[]
 }
 
 model Employee {
@@ -27,8 +27,8 @@ model Employee {
   dayOff    String?
   createdAt DateTime @default(now())
 
-  userId Int
-  user   User @relation(fields: [userId], references: [id], name: "UserEmployees")
+  userId    Int
+  user      User @relation(fields: [userId], references: [id])
 
   schedules Schedule[]
 }
