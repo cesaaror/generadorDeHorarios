@@ -4,14 +4,17 @@ import React, { useState, useEffect } from 'react';
 import MainLayout from '../layouts/MainLayout';
 import useEmployees from '../hooks/useEmployees';
 import SendWhatsApp from '../components/SendWhatsApp';
-import EditScheduleModal from '../components/EditScheduleModal';
+import DownloadPDF from '../components/DownloadPDF';
+
 
 interface Schedule {
   id: number;
   employeeId: number;
+  employeeName: string; // 🔥 Aquí sí tiene `employeeName`
   date: string;
   shift: 'MAÑANA' | 'TARDE';
 }
+
 
 export default function Horarios() {
   const { employees } = useEmployees();
@@ -144,11 +147,12 @@ export default function Horarios() {
             {message}
           </p>
         )}
+        
 
         {/* 📅 Lista de horarios agrupados por rol */}
         <div className="mt-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">📆 Horarios por Rol</h2>
-
+          
           {isLoading ? (
             <p className="text-center text-gray-500 animate-pulse">⏳ Cargando horarios...</p>
           ) : Object.keys(groupedSchedules).length === 0 ? (
@@ -162,6 +166,8 @@ export default function Horarios() {
                 >
                   {expandedRoles[role] ? '▼' : '▶'} {role} ({groupedSchedules[role].length} empleados)
                 </button>
+
+              
 
                 {expandedRoles[role] && (
                   <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
@@ -193,6 +199,8 @@ export default function Horarios() {
 
         {/* 📤 Botón para enviar horarios */}
         {schedules.length > 0 && <SendWhatsApp schedules={schedules} employees={employees} />}
+        {(schedules && schedules.length > 0) && <DownloadPDF schedules={schedules} />}
+
       </div>
     </MainLayout>
   );

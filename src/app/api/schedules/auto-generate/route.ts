@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient, Shift } from '@prisma/client';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const prisma = new PrismaClient();
 
@@ -24,19 +26,17 @@ async function getLastScheduleDate(): Promise<Date | null> {
 /** 📌 Generar horarios automáticamente */
 export async function POST(request: Request) {
   try {
-    const { generateForMonth, deletePrevious } = await request.json();
+    const { generateForMonth, deletePrevious, downloadPdf } = await request.json();
 
-    // ✅ Si `deletePrevious` está activado, eliminamos los horarios anteriores
     if (deletePrevious) {
       await prisma.schedule.deleteMany({});
     }
 
-    // ✅ Determinar la fecha de inicio (próximo lunes o después del último horario generado)
     let startDate = await getLastScheduleDate();
     if (!startDate || deletePrevious) {
-      startDate = getNextMonday(new Date()); // Si no hay horarios previos, empieza desde el próximo lunes
+      startDate = getNextMonday(new Date());
     } else {
-      startDate.setDate(startDate.getDate() + 1); // Comienza después del último horario registrado
+      startDate.setDate(startDate.getDate() + 1);
     }
 
     const employees = await prisma.employee.findMany();
@@ -44,28 +44,47 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: '❌ No hay empleados registrados para generar horarios.' }, { status: 400 });
     }
 
-    // ✅ Definir cuántas semanas se generarán (1 por defecto, 4 si es mensual)
     const weeksToGenerate = generateForMonth ? 4 : 1;
     const daysToGenerate = weeksToGenerate * 7;
-
-    // ✅ Generar los horarios
     const schedulesToCreate = [];
-    for (const employee of employees) {
-      for (let i = 0; i < daysToGenerate; i++) {
-        const currentDay = new Date(startDate);
-        currentDay.setDate(startDate.getDate() + i);
-        const shift: Shift = i % 2 === 0 ? Shift.MAÑANA : Shift.TARDE;
+    const weekSchedules: { [key: string]: any[] } = {};
 
-        schedulesToCreate.push({
-          employeeId: employee.id,
-          date: currentDay,
-          shift,
-        });
+    for (let i = 0; i < daysToGenerate; i++) {
+      const currentDay = new Date(startDate);
+      currentDay.setDate(startDate.getDate() + i);
+      const weekKey = `Semana ${Math.floor(i / 7) + 1}`;
+
+      for (const employee of employees) {
+        const shift: Shift = i % 2 === 0 ? Shift.MAÑANA : Shift.TARDE;
+        schedulesToCreate.push({ employeeId: employee.id, date: currentDay, shift });
+
+        if (!weekSchedules[weekKey]) weekSchedules[weekKey] = [];
+        weekSchedules[weekKey].push({ name: employee.name, date: currentDay, shift, role: employee.role });
       }
     }
 
-    // ✅ Insertar en la base de datos evitando duplicados
     await prisma.schedule.createMany({ data: schedulesToCreate });
+
+    if (downloadPdf) {
+      const pdf = new jsPDF();
+      pdf.text('Horarios Generados', 14, 10);
+
+      Object.keys(weekSchedules).forEach((week, index) => {
+        pdf.text(week, 14, 20 + index * 60);
+        autoTable(pdf, {
+          startY: 25 + index * 60,
+          head: [['Empleado', 'Fecha', 'Turno', 'Rol']],
+          body: weekSchedules[week].map((s) => [
+            s.name,
+            s.date.toLocaleDateString('es-ES'),
+            s.shift,
+            s.role,
+          ]),
+        });
+      });
+
+      pdf.save('Horarios_Generados.pdf');
+    }
 
     return NextResponse.json(
       { message: `✅ Horarios generados para ${weeksToGenerate} semana(s)`, schedulesCreated: schedulesToCreate.length },
