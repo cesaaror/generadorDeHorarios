@@ -1,67 +1,45 @@
 import MainLayout from '@/app/layouts/MainLayout';
-import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
-  const router = useRouter();
-
   return (
     <MainLayout>
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        {/* 🔵 Título principal */}
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-6 text-center">
-          📊 Dashboard - Gestión de Horarios
-        </h1>
-        
-        {/* 📖 Guía de uso */}
-        <div className="bg-blue-100 dark:bg-gray-800 border border-blue-300 dark:border-gray-600 p-6 rounded-lg shadow-md mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-            📖 Cómo utilizar la aplicación
+      <div className="max-w-4xl mx-auto p-6">
+        <h1 className="text-3xl font-bold mb-4">📊 Dashboard</h1>
+        <p className="text-lg text-gray-700 dark:text-gray-300">
+          ¡Bienvenido al sistema de gestión de empleados! Aquí puedes administrar horarios y empleados de manera eficiente.
+        </p>
+
+        {/* 📖 Manual de Usuario */}
+        <div className="mt-8 bg-blue-100 dark:bg-gray-800 p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold text-blue-800 dark:text-white mb-3">
+            📖 Manual de Uso - Paso a Paso
           </h2>
-          <p className="text-gray-700 dark:text-gray-300 mb-3">
-            Sigue estos pasos para navegar a través de la aplicación:
-          </p>
-          <ol className="list-decimal list-inside text-gray-800 dark:text-gray-300 space-y-2">
-            <li><strong>📋 Dashboard:</strong> Vista general del sistema y accesos rápidos.</li>
-            <li><strong>👥 Empleados:</strong> Agrega, edita y elimina empleados de la base de datos.</li>
-            <li><strong>🕒 Horarios:</strong> Genera y administra los turnos de los empleados.</li>
-            <li><strong>📅 Calendario:</strong> Visualiza y gestiona los horarios programados.</li>
-            <li><strong>📤 Exportar Horarios:</strong> Descarga los turnos en PDF antes de enviarlos.</li>
-            <li><strong>⚙️ Configuración:</strong> Personaliza tu cuenta y ajusta la app según tus necesidades.</li>
+          <ol className="list-decimal pl-5 space-y-3 text-gray-700 dark:text-gray-300">
+            <li>
+              📋 **Dashboard:** Aquí puedes ver un resumen de los empleados y turnos programados.
+            </li>
+            <li>
+              👥 **Empleados:** Agrega, edita y elimina empleados. Accede desde el menú lateral.
+            </li>
+            <li>
+              🕒 **Horarios:** Crea y ajusta turnos de los empleados de manera manual o automática.
+            </li>
+            <li>
+              📅 **Calendario:** Consulta los horarios asignados en una vista semanal o mensual.
+            </li>
+            <li>
+              ⚙️ **Configuración:** Personaliza la aplicación, cambia el tema y administra tu cuenta.
+            </li>
+            <li>
+              📲 **Enviar Horarios por WhatsApp:** Envía los turnos generados a los empleados directamente.
+            </li>
+            <li>
+              📄 **Descargar PDF:**  podrás descargar los horarios en un archivo PDF.
+            </li>
           </ol>
-          <p className="mt-4 text-gray-700 dark:text-gray-300 italic">
-            Puedes hacer clic en las opciones del menú lateral para navegar entre las secciones.
+          <p className="mt-4 text-sm italic text-gray-600 dark:text-gray-400">
+            Navega usando el menú lateral para acceder a cada sección.
           </p>
-        </div>
-
-        {/* 🔗 Accesos rápidos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <button 
-            onClick={() => router.push('/empleados')}
-            className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-green-600 transition w-full"
-          >
-            👥 Administrar Empleados
-          </button>
-
-          <button 
-            onClick={() => router.push('/horarios')}
-            className="bg-blue-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-blue-600 transition w-full"
-          >
-            🕒 Generar Horarios
-          </button>
-
-          <button 
-            onClick={() => router.push('/calendario')}
-            className="bg-yellow-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-yellow-600 transition w-full"
-          >
-            📅 Ver Calendario
-          </button>
-
-          <button 
-            onClick={() => router.push('/configuracion')}
-            className="bg-gray-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-gray-600 transition w-full"
-          >
-            ⚙️ Configuración
-          </button>
         </div>
       </div>
     </MainLayout>
