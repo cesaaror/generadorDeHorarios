@@ -4,11 +4,11 @@ import React, { useState, useEffect, ReactNode } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { FaBars, FaTimes } from 'react-icons/fa';
 
 interface MainLayoutProps {
   children?: React.ReactNode;
 }
-
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { theme, toggleTheme } = useTheme();
@@ -21,22 +21,25 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     setIsClient(true);
   }, []);
 
-  if (!isClient) return null; // ✅ Evita errores de SSR e hidratación
+  if (!isClient) return null;
 
   return (
     <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-black'}`}>
-      
       {/* 🔵 Barra de navegación superior */}
-      <header className="py-4 px-8 shadow-md flex justify-between items-center bg-gray-800 text-white">
-        <h1 
+      <header className="py-4 px-6 shadow-md flex justify-between items-center bg-gray-800 text-white">
+        <h1
           className="text-lg font-bold cursor-pointer hover:text-gray-300 transition-all duration-200"
           onClick={() => router.push('/dashboard')}
         >
           Gestión de Empleados
         </h1>
 
-        <div className="flex gap-4">
-          {/* 🔵 Cambio de tema */}
+        {/* Menú móvil */}
+        <button className="md:hidden text-2xl" onClick={() => setMenuOpen(true)}>
+          <FaBars />
+        </button>
+
+        <div className="hidden md:flex gap-4">
           <button
             onClick={toggleTheme}
             className="bg-blue-500 text-white px-4 py-2 rounded transition-all duration-200 hover:bg-blue-600"
@@ -45,7 +48,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             {theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
           </button>
 
-          {/* 🔵 Manejo de autenticación */}
           {status === 'loading' ? (
             <p className="text-gray-400">Verificando sesión...</p>
           ) : session ? (
@@ -68,29 +70,29 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </div>
       </header>
 
-      {/* 🔵 Layout con Sidebar */}
+      {/* 🔵 Menú lateral */}
       <div className="flex">
-        {/* 🔵 Barra lateral de navegación */}
+        {/* Sidebar en pantallas grandes */}
         <aside className="w-64 bg-gray-800 text-white min-h-screen p-6 hidden md:block shadow-md">
           <SidebarMenu />
         </aside>
 
-        {/* 🔵 Menú lateral para móviles */}
+        {/* Sidebar en móviles */}
         {menuOpen && (
-          <aside className="fixed top-0 left-0 w-64 bg-gray-800 text-white min-h-screen p-6 z-50 shadow-md md:hidden">
-            <button 
-              className="absolute top-4 right-4 text-white text-2xl"
-              onClick={() => setMenuOpen(false)}
-              aria-label="Cerrar menú"
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50" onClick={() => setMenuOpen(false)}>
+            <aside
+              className="fixed top-0 left-0 w-64 h-full bg-gray-800 text-white p-6 shadow-md transform transition-transform md:hidden"
             >
-              ✖
-            </button>
-            <SidebarMenu />
-          </aside>
+              <button className="absolute top-4 right-4 text-white text-2xl" onClick={() => setMenuOpen(false)}>
+                <FaTimes />
+              </button>
+              <SidebarMenu />
+            </aside>
+          </div>
         )}
 
-        {/* 📌 Contenido Principal */}
-        <main className="flex-1 p-8">{children}</main>
+        {/* 📌 Contenido principal */}
+        <main className="flex-1 p-6 md:p-8">{children}</main>
       </div>
     </div>
   );
