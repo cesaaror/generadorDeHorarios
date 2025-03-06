@@ -35,7 +35,7 @@ export default function Configuracion() {
     try {
       await emailjs.send(
         'service_5qwbsem', // ID del servicio
-        'template_xxxxxx', // ❗ Reemplaza con el ID de tu plantilla en EmailJS
+        'template_dkcz3vm', // ❗ Reemplaza con el ID de tu plantilla en EmailJS
         templateParams,
         'jKdPGSqMpbZMG6coQ' // Public Key de EmailJS
       );
