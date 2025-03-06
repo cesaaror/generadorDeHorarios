@@ -38,11 +38,11 @@ model Employee {
 
 model Schedule {
   id         Int      @id @default(autoincrement())
-  employeeId Int      
+  employeeId Int
   employee   Employee @relation(fields: [employeeId], references: [id])
   date       DateTime
   shift      Shift
-
+  role       Role     @default(REPONEDOR) // 🔥 Asignar un rol por defecto
   // 🔥 Índice para mejorar la búsqueda por empleado
   @@index([employeeId])
 }
