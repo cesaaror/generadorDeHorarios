@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import MainLayout from '../layouts/MainLayout';
 import { useTheme } from '../context/ThemeContext';
 import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { FaUserCog, FaPalette, FaLock, FaSignOutAlt, FaPaperPlane, FaStar } from 'react-icons/fa';
 import * as emailjs from 'emailjs-com';
 import Image from 'next/image';
@@ -11,6 +12,7 @@ import Image from 'next/image';
 export default function Configuracion() {
   const { theme, toggleTheme } = useTheme();
   const { data: session } = useSession();
+  const router = useRouter();
   const [suggestion, setSuggestion] = useState('');
   const [name, setName] = useState('');
   const [rating, setRating] = useState(5);
@@ -28,16 +30,16 @@ export default function Configuracion() {
     const templateParams = {
       from_name: name || session?.user?.name || 'Usuario Anónimo',
       message: suggestion,
-      rating: rating, // Puntuación del usuario
+      rating: rating,
       user_email: session?.user?.email,
     };
 
     try {
       await emailjs.send(
-        'service_5qwbsem', // ID del servicio
-        'template_dkcz3vm', // ❗ Reemplaza con el ID de tu plantilla en EmailJS
+        'service_5qwbsem',
+        'template_dkcz3vm',
         templateParams,
-        'jKdPGSqMpbZMG6coQ' // Public Key de EmailJS
+        'jKdPGSqMpbZMG6coQ'
       );
       setMessage('✅ ¡Sugerencia enviada correctamente!');
       setSuggestion('');
@@ -87,6 +89,17 @@ export default function Configuracion() {
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
                   <strong>Email:</strong> {session.user?.email || 'No disponible'}
                 </p>
+
+                {/* 🔴 Botón para Cerrar Sesión */}
+                <button
+                  onClick={() => {
+                    signOut();
+                    router.push('/auth/login'); // Redirige al login después de cerrar sesión
+                  }}
+                  className="bg-red-500 text-white px-6 py-2 rounded shadow-lg hover:bg-red-600 transition mt-4 flex items-center gap-2"
+                >
+                  <FaSignOutAlt /> Cerrar Sesión
+                </button>
               </>
             ) : (
               <p className="text-gray-500 italic">Inicia sesión para ver tu información.</p>
