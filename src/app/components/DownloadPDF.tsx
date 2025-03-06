@@ -22,7 +22,7 @@ export default function DownloadPDF({ schedules }: Props) {
     console.log('📄 PDF Generator Ready!');
   }, []);
 
-  // 🎨 Colores para cada rol
+  // 🎨 **Colores asignados según el rol**
   const roleColors: { [key: string]: [number, number, number] } = {
     CAJERO: [52, 152, 219], // Azul
     REPONEDOR: [46, 204, 113], // Verde
@@ -33,36 +33,67 @@ export default function DownloadPDF({ schedules }: Props) {
     ENCARGADO: [44, 62, 80], // Negro
   };
 
+  // 📅 **Agrupar horarios por semana**
+  const groupByWeek = (schedules: Schedule[]) => {
+    return schedules.reduce((acc: { [week: string]: Schedule[] }, schedule) => {
+      const date = new Date(schedule.date);
+      const firstDayOfWeek = new Date(date.setDate(date.getDate() - date.getDay() + 1))
+        .toISOString()
+        .split('T')[0]; // Obtener el lunes de la semana
+      if (!acc[firstDayOfWeek]) acc[firstDayOfWeek] = [];
+      acc[firstDayOfWeek].push(schedule);
+      return acc;
+    }, {});
+  };
+
   const generatePDF = () => {
     const doc = new jsPDF();
+    
+    // 🏷️ **Título del documento**
     doc.setFontSize(18);
     doc.text('📅 Horario de Empleados', 70, 15);
 
-    autoTable(doc, {
-      startY: 25,
-      head: [['Empleado', 'Rol', 'Fecha', 'Turno']],
-      body: schedules.map((s) => [
-        s.employeeName,
-        s.role,
-        new Date(s.date).toLocaleDateString('es-ES'),
-        s.shift,
-      ]),
-      theme: 'grid',
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [41, 128, 185], textColor: [255, 255, 255] },
+    const groupedByWeek = groupByWeek(schedules);
+    let startY = 25;
 
-      // ✅ Corregido el acceso a `row.raw`
-      didParseCell: (data) => {
-        if (data.row.section === 'body' && Array.isArray(data.row.raw)) {
-          const role = data.row.raw[1] as string; // El rol está en la segunda columna
-          if (roleColors[role]) {
-            data.cell.styles.fillColor = roleColors[role];
-            data.cell.styles.textColor = role === 'ENCARGADO' ? [255, 255, 255] : [0, 0, 0];
+    // 🔄 **Generar tabla por cada semana**
+    Object.keys(groupedByWeek).forEach((week, index) => {
+      if (index > 0) startY += 15; // Espacio entre semanas
+
+      doc.setFontSize(14);
+      doc.text(`Semana del ${week}`, 14, startY);
+
+      autoTable(doc, {
+        startY: startY + 5,
+        head: [['Empleado', 'Rol', 'Fecha', 'Turno']],
+        body: groupedByWeek[week].map((s) => [
+          s.employeeName,
+          s.role,
+          new Date(s.date).toLocaleDateString('es-ES'),
+          s.shift,
+        ]),
+        theme: 'grid',
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [41, 128, 185], textColor: [255, 255, 255] },
+
+        // 🎨 **Aplicar colores por rol**
+        didParseCell: (data) => {
+          if (data.row.section === 'body' && data.row.raw) {
+            const rowData = data.row.raw as string[];
+            const role = rowData[1]; // **Obtener el rol del empleado**
+            if (roleColors[role]) {
+              data.cell.styles.fillColor = roleColors[role];
+              data.cell.styles.textColor = role === 'ENCARGADO' ? [255, 255, 255] : [0, 0, 0];
+            }
           }
-        }
-      },
+        },
+      });
+
+      // ✅ **Corrección de `lastAutoTable`**
+      startY = (doc as any).previousAutoTable?.finalY + 10 || startY + 20;
     });
 
+    // 💾 **Guardar el PDF**
     doc.save('horario.pdf');
   };
 
