@@ -67,6 +67,27 @@ export default function Horarios() {
     }
   };
 
+  // ✏️ **Función para cambiar el turno del empleado**
+  const handleEditSchedule = async (schedule: Schedule, newShift: 'MAÑANA' | 'TARDE') => {
+    try {
+      const response = await fetch(`/api/schedules/${schedule.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employeeId: schedule.employeeId, shift: newShift }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Error al actualizar el turno');
+
+      setMessage('✅ Turno actualizado correctamente.');
+      setSchedules((prev) =>
+        prev.map((s) => (s.id === schedule.id ? { ...s, shift: newShift } : s))
+      );
+    } catch (err: any) {
+      setMessage(`❌ ${err.message}`);
+    }
+  };
+
   const groupByWeek = (schedules: Schedule[]) => {
     return schedules.reduce((acc: { [week: string]: Schedule[] }, schedule) => {
       const date = new Date(schedule.date);
@@ -139,8 +160,14 @@ export default function Horarios() {
                       {expandedEmployee === employee.id && (
                         <ul className="mt-2 bg-gray-50 dark:bg-gray-700 rounded-lg shadow-md p-4">
                           {employeeSchedules.map((schedule) => (
-                            <li key={schedule.id} className="p-2 border-b dark:border-gray-600">
+                            <li key={schedule.id} className="p-2 border-b dark:border-gray-600 flex justify-between items-center">
                               📅 {new Date(schedule.date).toLocaleDateString('es-ES')} - 🕒 {schedule.shift}
+                              <button
+                                onClick={() => handleEditSchedule(schedule, schedule.shift === 'MAÑANA' ? 'TARDE' : 'MAÑANA')}
+                                className="bg-blue-500 text-white px-3 py-1 rounded shadow hover:bg-blue-600 transition"
+                              >
+                                Cambiar Turno
+                              </button>
                             </li>
                           ))}
                         </ul>
