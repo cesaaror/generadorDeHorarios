@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { Role, Shift } from '@/app/types/roles'; // ✅ Importamos los enums desde el nuevo archivo
+import { Role, Shift } from '@/app/types/roles';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'; // 🔥 Importación correcta de authOptions
+import { z } from 'zod'; // 📌 Importamos `zod` para validar datos
 
 const prisma = new PrismaClient();
 
 /**
- * 🚀 Función para generar un día libre aleatorio
+ * 🎲 **Función para generar un día libre aleatorio**
  */
 const getRandomDayOff = () => {
   const diasSemana = ['LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO', 'DOMINGO'];
@@ -13,12 +16,33 @@ const getRandomDayOff = () => {
 };
 
 /**
- * 🚀 Obtener la lista de empleados
+ * 📌 **Validación del cuerpo del request usando Zod**
+ */
+const EmployeeSchema = z.object({
+  name: z.string().min(2, 'El nombre es muy corto'),
+  phone: z.string().min(8, 'Teléfono inválido'),
+  role: z.nativeEnum(Role),
+  shift: z.nativeEnum(Shift).default(Shift.MAÑANA),
+  dayOff: z.string().optional(),
+});
+
+/**
+ * 🚀 **Obtener la lista de empleados SOLO del usuario autenticado**
  */
 export const GET = async () => {
   try {
-    const employees = await prisma.employee.findMany();
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.email) {
+      return NextResponse.json({ message: '❌ No autorizado' }, { status: 401 });
+    }
+
+    // 📌 Buscar solo los empleados del usuario autenticado
+    const employees = await prisma.employee.findMany({
+      where: { user: { email: session.user.email } }, // ✅ Solo empleados del usuario autenticado
+    });
+
     return NextResponse.json({ employees }, { status: 200 });
+
   } catch (error: any) {
     console.error('❌ Error al obtener empleados:', error);
     return NextResponse.json(
@@ -29,57 +53,50 @@ export const GET = async () => {
 };
 
 /**
- * 🚀 Agregar un nuevo empleado
+ * 🚀 **Agregar un nuevo empleado SOLO para el usuario autenticado**
  */
 export const POST = async (request: Request) => {
   try {
-    const body = await request.json().catch(() => null);
-
-    if (!body || Object.keys(body).length === 0) {
-      return NextResponse.json({ message: '❌ Error: No se recibieron datos.' }, { status: 400 });
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.email) {
+      return NextResponse.json({ message: '❌ No autorizado' }, { status: 401 });
     }
 
-    const { name, phone, role, dayOff, userId, shift } = body;
-
-    if (!name || !phone || !role || !userId) {
-      return NextResponse.json({ message: '❌ Error: Todos los campos son obligatorios.' }, { status: 400 });
+    const body = await request.json();
+    const validationResult = EmployeeSchema.safeParse(body);
+    if (!validationResult.success) {
+      return NextResponse.json({ message: '❌ Datos inválidos.', errors: validationResult.error.format() }, { status: 400 });
     }
 
-    const parsedUserId = Number(userId);
-    if (isNaN(parsedUserId)) {
-      return NextResponse.json({ message: '❌ Error: userId inválido.' }, { status: 400 });
+    const { name, phone, role, shift, dayOff } = validationResult.data;
+
+    // 📌 Buscar el usuario autenticado
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
+      return NextResponse.json({ message: '❌ Usuario no encontrado' }, { status: 404 });
     }
 
-    if (!Object.values(Role).includes(role as Role)) {
-      return NextResponse.json({ message: `❌ Error: El rol '${role}' no es válido.` }, { status: 400 });
-    }
-
-    // ✅ Validar el `shift` y asignar por defecto MAÑANA si es inválido
-    const shiftValue: Shift = Object.values(Shift).includes(shift as Shift) ? (shift as Shift) : Shift.MAÑANA;
-
-    // Verificar si el empleado ya existe por teléfono
+    // 📌 Verificar si el empleado ya existe por teléfono
     const existingEmployee = await prisma.employee.findUnique({ where: { phone } });
     if (existingEmployee) {
-      return NextResponse.json({ message: '❌ Error: El empleado ya existe.' }, { status: 400 });
+      return NextResponse.json({ message: '❌ El empleado ya existe con este teléfono.' }, { status: 400 });
     }
 
-    const userExists = await prisma.user.findUnique({ where: { id: parsedUserId } });
-    if (!userExists) {
-      return NextResponse.json({ message: `❌ Error: No se encontró usuario con ID ${parsedUserId}.` }, { status: 400 });
-    }
+    // 📌 Asignar día libre aleatorio si no se proporciona
+    const assignedDayOff = dayOff && dayOff.trim() !== '' ? dayOff : getRandomDayOff();
 
-    const assignedDayOff = dayOff && typeof dayOff === 'string' && dayOff.trim() !== ''
-      ? dayOff
-      : getRandomDayOff();
-
+    // 📌 Crear el nuevo empleado vinculado al usuario autenticado
     const newEmployee = await prisma.employee.create({
       data: {
         name,
         phone,
         role,
-        shift: shiftValue,
+        shift,
         dayOff: assignedDayOff,
-        userId: parsedUserId,
+        userId: user.id,
       },
     });
 

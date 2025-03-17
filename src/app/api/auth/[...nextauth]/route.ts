@@ -1,11 +1,11 @@
-import NextAuth from 'next-auth';
+import NextAuth, { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-const handler = NextAuth({
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -15,33 +15,29 @@ const handler = NextAuth({
       },
       authorize: async (credentials) => {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email and password are required');
+          throw new Error('Email y contraseña son obligatorios');
         }
 
-        // Buscar al usuario en la base de datos
+        // 📌 Buscar usuario en la base de datos
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         });
 
         if (!user) {
-          throw new Error('No user found with this email');
+          throw new Error('No se encontró un usuario con este email');
         }
 
-        // Verificar la contraseña
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-
+        // 📌 Verificar la contraseña
+        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
         if (!isPasswordValid) {
-          throw new Error('Invalid password');
+          throw new Error('Contraseña inválida');
         }
 
-        // ✅ Retornar el usuario asegurando que incluya `name`
+        // ✅ Retornar el usuario asegurando que incluya `id`, `email` y `name`
         return { 
           id: user.id.toString(), 
           email: user.email, 
-          name: user.name || 'Usuario Desconocido' // 🔥 Asegurar que `name` esté presente
+          name: user.name || 'Usuario Desconocido'
         };
       },
     }),
@@ -53,26 +49,26 @@ const handler = NextAuth({
   },
   callbacks: {
     async session({ session, token }) {
-      // ✅ Agregar `name` a la sesión
       if (token) {
         session.user = {
           id: token.sub as string,
           email: token.email as string,
-          name: token.name as string, // 🔥 Incluir `name` en la sesión
+          name: token.name as string,
         };
       }
       return session;
     },
     async jwt({ token, user }) {
-      // ✅ Incluir `name` en el token
       if (user) {
         token.sub = user.id;
         token.email = user.email;
-        token.name = user.name; // 🔥 Guardamos `name` en el token
+        token.name = user.name;
       }
       return token;
     },
   },
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
