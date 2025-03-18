@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react'; // ✅ Importa useSession para obtener el usuario autenticado
 
 interface Employee {
   id: number;
@@ -16,30 +17,36 @@ interface UseEmployees {
 }
 
 const useEmployees = (): UseEmployees => {
+  const { data: session } = useSession(); // ✅ Obtener la sesión del usuario autenticado
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Función para obtener empleados
-  const fetchEmployees = async () => {
-    try {
-      const response = await fetch('/api/employees');
-      if (!response.ok) throw new Error(`Error ${response.status}: ${await response.text()}`);
-
-      const result = await response.json();
-      setEmployees(result.employees || []);
-    } catch (err: any) {
-      console.error('Error al obtener empleados:', err);
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Ejecutar fetchEmployees cuando el componente se monta
+  // ✅ Obtener empleados SOLO si el usuario está autenticado
   useEffect(() => {
+    if (!session?.user?.email) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchEmployees = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch('/api/employees');
+        if (!response.ok) throw new Error(`Error ${response.status}: ${await response.text()}`);
+
+        const result = await response.json();
+        setEmployees(result.employees || []);
+      } catch (err: any) {
+        console.error('Error al obtener empleados:', err);
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     fetchEmployees();
-  }, []);
+  }, [session?.user?.email]); // ✅ Usar session.user.email como dependencia
 
   return { employees, setEmployees, isLoading, error };
 };

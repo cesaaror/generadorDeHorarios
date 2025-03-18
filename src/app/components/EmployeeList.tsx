@@ -10,11 +10,10 @@ interface Employee {
 
 interface EmployeeListProps {
   employees: Employee[];
-  setEmployees: React.Dispatch<React.SetStateAction<Employee[]>>;
+  setEmployees: React.Dispatch<React.SetStateAction<Employee[]>>; // ✅ Asegurar el tipo correcto
 }
 
 const EmployeeList: React.FC<EmployeeListProps> = ({ employees, setEmployees }) => {
-  // ✅ Eliminar empleado
   const handleDelete = async (id: number) => {
     if (!window.confirm('¿Seguro que deseas eliminar este empleado?')) return;
 
@@ -23,7 +22,7 @@ const EmployeeList: React.FC<EmployeeListProps> = ({ employees, setEmployees }) 
 
       if (!response.ok) throw new Error('No se pudo eliminar el empleado');
 
-      setEmployees(employees.filter(emp => emp.id !== id));
+      setEmployees((prev) => prev.filter(emp => emp.id !== id)); // ✅ Actualizar correctamente el estado
     } catch (error) {
       console.error('❌ Error eliminando empleado:', error);
     }
