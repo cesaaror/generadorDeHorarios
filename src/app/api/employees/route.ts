@@ -36,9 +36,19 @@ export const GET = async () => {
       return NextResponse.json({ message: '❌ No autorizado' }, { status: 401 });
     }
 
-    // 📌 Buscar solo los empleados del usuario autenticado
+    // ✅ Buscar el ID del usuario autenticado
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true }, // Solo necesitamos el ID
+    });
+
+    if (!user) {
+      return NextResponse.json({ message: '❌ Usuario no encontrado' }, { status: 404 });
+    }
+
+    // ✅ Buscar solo los empleados del usuario autenticado
     const employees = await prisma.employee.findMany({
-      where: { user: { email: session.user.email } }, // ✅ Solo empleados del usuario autenticado
+      where: { userId: user.id }, // 🔥 Ahora sí filtra correctamente
     });
 
     return NextResponse.json({ employees }, { status: 200 });
@@ -51,6 +61,7 @@ export const GET = async () => {
     );
   }
 };
+
 
 /**
  * 🚀 **Agregar un nuevo empleado SOLO para el usuario autenticado**
